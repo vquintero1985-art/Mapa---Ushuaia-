@@ -1,0 +1,2314 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+Circuito Ushuaia — Naturaleza y Aventura en el Fin del Mundo
+</title>
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+/>
+
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js">
+</script>
+
+<style>
+
+/* ==========================================================
+   ESTILO GENERAL
+========================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  background: #08151d;
+  color: #fff;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+
+/* ==========================================================
+   PANEL LATERAL
+========================================================== */
+
+.sidebar {
+
+  width: 390px;
+  min-width: 390px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #09283a 0%,
+      #0c3549 48%,
+      #071a24 100%
+    );
+
+  overflow-y: auto;
+
+  box-shadow:
+    5px 0 20px rgba(0,0,0,.35);
+
+  position: relative;
+  z-index: 1000;
+}
+
+
+.sidebar-header {
+
+  padding: 24px 22px 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(7,42,59,.98),
+      rgba(11,76,96,.95)
+    );
+
+  border-bottom:
+    3px solid #ff7a3c;
+}
+
+
+.sidebar-header h1 {
+
+  margin: 0;
+
+  font-size: 21px;
+
+  line-height: 1.2;
+}
+
+
+.sidebar-header p {
+
+  margin: 9px 0 0;
+
+  color: #c8dfe8;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+/* ==========================================================
+   FECHA
+========================================================== */
+
+.trip-date {
+
+  margin-top: 14px;
+
+  display: inline-block;
+
+  background: #ff7a3c;
+
+  padding: 6px 10px;
+
+  border-radius: 20px;
+
+  font-size: 11px;
+
+  font-weight: bold;
+}
+
+
+/* ==========================================================
+   BOTONES DE DÍAS
+========================================================== */
+
+.day-selector {
+
+  padding: 15px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, 1fr);
+
+  gap: 6px;
+
+  background: rgba(0,0,0,.15);
+}
+
+
+.day-button {
+
+  border: 0;
+
+  padding: 9px 4px;
+
+  border-radius: 8px;
+
+  background: rgba(255,255,255,.09);
+
+  color: white;
+
+  cursor: pointer;
+
+  font-weight: bold;
+
+  font-size: 11px;
+
+  transition: .2s;
+}
+
+
+.day-button:hover {
+
+  background:
+    rgba(255,255,255,.18);
+}
+
+
+.day-button.active {
+
+  background: #ff7a3c;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.3);
+}
+
+
+/* ==========================================================
+   CONTENIDO DEL DÍA
+========================================================== */
+
+.day-content {
+
+  padding: 18px;
+}
+
+
+.day-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 5px;
+}
+
+
+.day-icon {
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 21px;
+
+  border: 2px solid white;
+
+  box-shadow:
+    0 2px 7px rgba(0,0,0,.35);
+}
+
+
+.day-title h2 {
+
+  margin: 0;
+
+  font-size: 18px;
+}
+
+
+.day-subtitle {
+
+  color: #c8dfe8;
+
+  font-size: 12px;
+
+  margin-bottom: 16px;
+}
+
+
+/* ==========================================================
+   TARJETAS DE ITINERARIO
+========================================================== */
+
+.timeline {
+
+  position: relative;
+
+  margin-top: 12px;
+}
+
+
+.timeline::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 43px;
+
+  top: 10px;
+
+  bottom: 10px;
+
+  width: 2px;
+
+  background:
+    rgba(255,255,255,.2);
+}
+
+
+.timeline-item {
+
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    62px 1fr;
+
+  gap: 10px;
+
+  margin-bottom: 13px;
+}
+
+
+.timeline-time {
+
+  color: #ffb08b;
+
+  font-size: 11px;
+
+  font-weight: bold;
+
+  text-align: right;
+
+  padding-top: 4px;
+}
+
+
+.timeline-card {
+
+  background:
+    rgba(255,255,255,.075);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  border-radius: 9px;
+
+  padding: 10px 11px;
+
+  cursor: pointer;
+
+  transition: .2s;
+}
+
+
+.timeline-card:hover {
+
+  background:
+    rgba(255,255,255,.13);
+
+  transform:
+    translateX(2px);
+}
+
+
+.timeline-card strong {
+
+  display: block;
+
+  font-size: 12px;
+
+  margin-bottom: 4px;
+}
+
+
+.timeline-card span {
+
+  display: block;
+
+  color: #bdd4dd;
+
+  font-size: 10.5px;
+
+  line-height: 1.45;
+}
+
+
+/* ==========================================================
+   FICHA DE ACTIVIDAD
+========================================================== */
+
+.activity-box {
+
+  margin-top: 18px;
+
+  padding: 13px;
+
+  background:
+    rgba(255,255,255,.06);
+
+  border-radius: 10px;
+
+  border-left:
+    4px solid #ff7a3c;
+}
+
+
+.activity-box h3 {
+
+  margin: 0 0 7px;
+
+  font-size: 13px;
+}
+
+
+.activity-box p {
+
+  margin: 0;
+
+  color: #c9dce3;
+
+  font-size: 11px;
+
+  line-height: 1.55;
+}
+
+
+/* ==========================================================
+   INDICADORES
+========================================================== */
+
+.stats {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 6px;
+
+  margin-top: 12px;
+}
+
+
+.stat {
+
+  padding: 8px 5px;
+
+  border-radius: 7px;
+
+  background:
+    rgba(0,0,0,.18);
+
+  text-align: center;
+}
+
+
+.stat b {
+
+  display: block;
+
+  font-size: 12px;
+
+  color: white;
+}
+
+
+.stat span {
+
+  font-size: 9px;
+
+  color: #aac6d0;
+}
+
+
+/* ==========================================================
+   MAPA
+========================================================== */
+
+#map {
+
+  flex: 1;
+
+  height: 100vh;
+
+  position: relative;
+}
+
+
+/* ==========================================================
+   MARCADORES
+========================================================== */
+
+.map-marker {
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+
+  border: 3px solid white;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: white;
+
+  font-size: 17px;
+
+  box-shadow:
+    0 3px 9px rgba(0,0,0,.55);
+}
+
+
+.base-marker {
+
+  background: #ff7a3c;
+}
+
+
+/* ==========================================================
+   POPUP
+========================================================== */
+
+.leaflet-popup-content-wrapper {
+
+  border-radius: 12px;
+}
+
+
+.leaflet-popup-content {
+
+  min-width: 230px;
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+
+.popup-day {
+
+  display: inline-block;
+
+  color: white;
+
+  padding: 3px 7px;
+
+  border-radius: 5px;
+
+  font-size: 10px;
+
+  font-weight: bold;
+
+  margin-bottom: 6px;
+}
+
+
+.popup-title {
+
+  color: #0a5069;
+
+  font-weight: bold;
+
+  font-size: 14px;
+
+  margin-bottom: 5px;
+}
+
+
+/* ==========================================================
+   LEYENDA
+========================================================== */
+
+.legend {
+
+  background:
+    rgba(255,255,255,.96);
+
+  color: #18313c;
+
+  padding: 12px 14px;
+
+  border-radius: 10px;
+
+  box-shadow:
+    0 3px 14px rgba(0,0,0,.3);
+
+  font-size: 11px;
+
+  line-height: 1.6;
+}
+
+
+.legend-title {
+
+  font-weight: bold;
+
+  color: #0a5069;
+
+  margin-bottom: 5px;
+}
+
+
+/* ==========================================================
+   BOTÓN DEL PANEL
+========================================================== */
+
+.map-control {
+
+  background: white;
+
+  border: 0;
+
+  padding: 9px 12px;
+
+  border-radius: 7px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.3);
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  color: #17323d;
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width: 850px) {
+
+  #app {
+
+    display: block;
+
+  }
+
+  .sidebar {
+
+    width: 100%;
+
+    min-width: 0;
+
+    height: 43vh;
+
+  }
+
+  #map {
+
+    height: 57vh;
+
+  }
+
+  .sidebar-header {
+
+    padding: 13px 16px;
+
+  }
+
+  .sidebar-header h1 {
+
+    font-size: 17px;
+
+  }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="app">
+
+<!-- ========================================================
+     PANEL
+========================================================= -->
+
+<aside class="sidebar">
+
+  <div class="sidebar-header">
+
+```
+<h1>
+  🧭 Ushuaia
+  <br>
+  Naturaleza & Aventura
+</h1>
+
+<p>
+  Circuito turístico radial de 5 días /
+  4 noches con base en Ushuaia.
+</p>
+
+<div class="trip-date">
+  6 — 10 FEBRERO 2027
+</div>
+```
+
+  </div>
+
+  <!-- SELECTOR -->
+
+  <div class="day-selector">
+
+```
+<button
+  class="day-button active"
+  onclick="showDay(1)"
+  id="btn1">
+  DÍA 1
+</button>
+
+<button
+  class="day-button"
+  onclick="showDay(2)"
+  id="btn2">
+  DÍA 2
+</button>
+
+<button
+  class="day-button"
+  onclick="showDay(3)"
+  id="btn3">
+  DÍA 3
+</button>
+
+<button
+  class="day-button"
+  onclick="showDay(4)"
+  id="btn4">
+  DÍA 4
+</button>
+
+<button
+  class="day-button"
+  onclick="showDay(5)"
+  id="btn5">
+  DÍA 5
+</button>
+```
+
+  </div>
+
+  <div id="dayContent"
+       class="day-content">
+  </div>
+
+</aside>
+
+<!-- ========================================================
+     MAPA
+========================================================= -->
+
+<div id="map"></div>
+
+</div>
+
+<script>
+
+
+/* ==========================================================
+   DATOS
+========================================================== */
+
+const days = {
+
+
+1: {
+
+  color: "#6c757d",
+
+  icon: "✈️",
+
+  title:
+    "Bienvenidos al Fin del Mundo",
+
+  subtitle:
+    "Llegada · recepción · Ushuaia centro · costanera",
+
+  stats: [
+    ["4 km", "aeropuerto → ciudad"],
+    ["Libre", "tarde"],
+    ["🏨", "alojamiento"]
+  ],
+
+  description:
+    "Jornada de recepción y aclimatación. Se evita programar una excursión exigente y se propone un primer contacto tranquilo con Ushuaia y el Canal Beagle.",
+
+  timeline: [
+
+    ["Según vuelo",
+     "✈️ Llegada",
+     "Recepción en el Aeropuerto Internacional Malvinas Argentinas y traslado privado al alojamiento."],
+
+    ["Llegada",
+     "🏨 Check-in",
+     "Ingreso al hotel, distribución de habitaciones y tiempo de descanso."],
+
+    ["13:00",
+     "🍽️ Almuerzo / tiempo libre",
+     "Almuerzo, descanso, recorrido por el centro, costanera, puerto y Paseo de Artesanos."],
+
+    ["16:00",
+     "🚶 Caminata de bienvenida",
+     "Caminata introductoria por la costanera como primer contacto con el paisaje del Canal Beagle."],
+
+    ["20:00",
+     "🍴 Cena libre",
+     "Cena a elección del pasajero y alojamiento en Ushuaia."]
+
+  ]
+
+},
+
+
+2: {
+
+  color: "#2e7d32",
+
+  icon: "🌲",
+
+  title:
+    "Donde termina la ruta y comienza la aventura",
+
+  subtitle:
+    "Parque Nacional Tierra del Fuego + Tren del Fin del Mundo",
+
+  stats: [
+    ["08:00", "desayuno"],
+    ["09:15", "tren"],
+    ["18:30", "regreso"]
+  ],
+
+  description:
+    "Primera gran jornada de naturaleza. El recorrido combina historia ferroviaria, bosques, turberas, lagos y costa del Canal Beagle.",
+
+  timeline: [
+
+    ["08:00",
+     "☕ Desayuno",
+     "Desayuno en el hotel."],
+
+    ["08:45",
+     "🚐 Salida",
+     "Traslado en minibús turístico hacia la Estación del Fin del Mundo."],
+
+    ["09:15",
+     "🚂 Tren del Fin del Mundo",
+     "Recorrido ferroviario hacia el Parque Nacional, con parada intermedia en estación Macarena."],
+
+    ["11:15",
+     "🌲 Parque Nacional",
+     "Continuación del recorrido en vehículo turístico por el área protegida."],
+
+    ["11:45",
+     "🌊 Ensenada Zaratiegui",
+     "Parada panorámica costera, fotografía y caminata corta."],
+
+    ["12:30",
+     "🥪 Almuerzo",
+     "Almuerzo tipo vianda o en establecimiento habilitado."],
+
+    ["13:30",
+     "🏔️ Lago Acigami",
+     "Visita al lago, bosque y paisaje de montaña."],
+
+    ["14:30",
+     "🌊 Bahía Lapataia",
+     "Llegada al punto emblemático donde finaliza la Ruta Nacional 3."],
+
+    ["15:00",
+     "🥾 Mirador Lapataia",
+     "Sendero de baja dificultad: aproximadamente 980 m y 30 minutos."],
+
+    ["16:00",
+     "📸 Pasarelas",
+     "Fotografía, contemplación e interpretación del paisaje."],
+
+    ["17:00",
+     "🚐 Regreso",
+     "Retorno hacia Ushuaia."],
+
+    ["18:30",
+     "🏨 Hotel",
+     "Llegada aproximada y tiempo libre. Cena libre."]
+
+  ]
+
+},
+
+
+3: {
+
+  color: "#1565c0",
+
+  icon: "🥾",
+
+  title:
+    "El espejo verde de la montaña",
+
+  subtitle:
+    "Trekking Laguna Esmeralda",
+
+  stats: [
+    ["9 km", "ida y vuelta"],
+    ["4–5 h", "trekking"],
+    ["220 m", "desnivel"]
+  ],
+
+  description:
+    "Jornada de aventura moderada. El sendero atraviesa bosque de lenga, turbal y sectores de montaña hasta llegar a la laguna de origen glaciario.",
+
+  timeline: [
+
+    ["07:30",
+     "☕ Desayuno",
+     "Desayuno en el hotel."],
+
+    ["08:15",
+     "🚐 Salida",
+     "Traslado hacia el inicio del sendero por la Ruta Nacional 3."],
+
+    ["08:45",
+     "🥾 Inicio del trekking",
+     "Comienzo del recorrido de aproximadamente 9 km ida y vuelta."],
+
+    ["09:30",
+     "🌲 Bosque de lenga",
+     "Tramo inicial entre bosque y vegetación subantártica."],
+
+    ["10:30",
+     "🌿 Turbal",
+     "Cruce de sectores de turbera y pequeños cursos de agua."],
+
+    ["11:00",
+     "💎 Laguna Esmeralda",
+     "Llegada al destino. Descanso, fotografías e interpretación ambiental."],
+
+    ["12:00",
+     "🥪 Almuerzo",
+     "Box lunch y tiempo de contemplación."],
+
+    ["12:30",
+     "🥾 Regreso",
+     "Regreso por el mismo sendero."],
+
+    ["15:00",
+     "🚐 Fin del trekking",
+     "Recepción del grupo y regreso a Ushuaia."],
+
+    ["16:00",
+     "☕ Tarde libre",
+     "Descanso, centro, comercios, café o actividades personales."],
+
+    ["20:00",
+     "🍴 Cena libre",
+     "Cena y alojamiento en Ushuaia."]
+
+  ]
+
+},
+
+
+4: {
+
+  color: "#00838f",
+
+  icon: "⛴️",
+
+  title:
+    "Navegando hacia el Fin del Mundo",
+
+  subtitle:
+    "Canal Beagle + islas + Faro Les Éclaireurs",
+
+  stats: [
+    ["09:30", "embarque"],
+    ["≈ 3–4 h", "navegación"],
+    ["20 km", "aprox. al faro"]
+  ],
+
+  description:
+    "Cambio de escenario: después de las jornadas terrestres, el circuito se traslada al medio marítimo para conocer el ecosistema e historia del Canal Beagle.",
+
+  timeline: [
+
+    ["08:00",
+     "☕ Desayuno",
+     "Desayuno en el alojamiento."],
+
+    ["09:00",
+     "🚶 Puerto",
+     "Traslado desde el alojamiento hacia el puerto turístico."],
+
+    ["09:30",
+     "⛴️ Embarque",
+     "Inicio de la navegación por el Canal Beagle."],
+
+    ["10:00",
+     "🐦 Isla de los Pájaros",
+     "Observación de aves marinas y explicación del ecosistema."],
+
+    ["10:30",
+     "🦭 Isla de los Lobos",
+     "Observación de fauna marina."],
+
+    ["11:00",
+     "🚨 Faro Les Éclaireurs",
+     "Parada fotográfica y explicación histórica y paisajística."],
+
+    ["11:30",
+     "🥾 Isla Bridges",
+     "Si el prestador lo incluye, desembarco y sendero interpretativo."],
+
+    ["12:30",
+     "⚓ Puerto",
+     "Regreso al puerto de Ushuaia."],
+
+    ["13:00",
+     "🍽️ Almuerzo",
+     "Almuerzo libre en la zona céntrica."],
+
+    ["14:30",
+     "☕ Tiempo libre",
+     "Centro, compras, cafetería, costanera o descanso."],
+
+    ["18:00",
+     "🌅 Actividad opcional",
+     "Caminata urbana por el borde costero o tiempo libre."],
+
+    ["20:00",
+     "🍴 Cena de despedida",
+     "Cena grupal opcional con gastronomía regional."]
+
+  ]
+
+},
+
+
+5: {
+
+  color: "#8e24aa",
+
+  icon: "🏔️",
+
+  title:
+    "Entre el bosque y el hielo",
+
+  subtitle:
+    "Glaciar Martial + mirador panorámico + regreso",
+
+  stats: [
+    ["09:00", "check-out"],
+    ["2,5 km", "circuito"],
+    ["15:30", "aeropuerto"]
+  ],
+
+  description:
+    "Cierre del circuito con una actividad de montaña próxima a la ciudad y de menor duración que Laguna Esmeralda.",
+
+  timeline: [
+
+    ["08:00",
+     "☕ Desayuno",
+     "Desayuno en el alojamiento."],
+
+    ["09:00",
+     "🧳 Check-out",
+     "Check-out y guarda de equipaje hasta el traslado."],
+
+    ["09:30",
+     "🚐 Cerro Martial",
+     "Traslado hacia la zona del Glaciar Martial."],
+
+    ["10:00",
+     "🥾 Circuito Mirador",
+     "Circuito de aproximadamente 2.500 m, 75 minutos y 220 m de desnivel."],
+
+    ["11:30",
+     "📸 Contemplación",
+     "Tiempo para fotografías y descanso."],
+
+    ["12:00",
+     "🥾 Descenso",
+     "Regreso hacia la base del circuito."],
+
+    ["13:00",
+     "🍽️ Almuerzo",
+     "Almuerzo libre."],
+
+    ["14:00",
+     "🏙️ Mirador panorámico",
+     "Última vista de Ushuaia y del Canal Beagle."],
+
+    ["15:00",
+     "🏨 Hotel",
+     "Retiro del equipaje."],
+
+    ["15:30",
+     "✈️ Aeropuerto",
+     "Traslado privado al Aeropuerto Internacional Malvinas Argentinas."],
+
+    ["Fin",
+     "🌎 Fin del circuito",
+     "Regreso previsto: miércoles 10 de febrero de 2027."]
+
+  ]
+
+}
+
+};
+
+
+/* ==========================================================
+   COORDENADAS
+========================================================== */
+
+const locations = {
+
+  airport: [
+    -54.8433,
+    -68.2956
+  ],
+
+  center: [
+    -54.8069066,
+    -68.3074902
+  ],
+
+  port: [
+    -54.8078046,
+    -68.3033701
+  ],
+
+  train: [
+    -54.8332301,
+    -68.4237465
+  ],
+
+  ensenada: [
+    -54.8386,
+    -68.4052
+  ],
+
+  acigami: [
+    -54.8418,
+    -68.5570
+  ],
+
+  lapataia: [
+    -54.8367,
+    -68.5530
+  ],
+
+  lapataiaView: [
+    -54.8318,
+    -68.5510
+  ],
+
+  esmeralda: [
+    -54.7094649,
+    -68.122068
+  ],
+
+  esmeraldaTrail: [
+    -54.7180,
+    -68.1370
+  ],
+
+  birds: [
+    -54.8650,
+    -68.0400
+  ],
+
+  wolves: [
+    -54.8700,
+    -68.0700
+  ],
+
+  lighthouse: [
+    -54.8715021,
+    -68.0832383
+  ],
+
+  bridges: [
+    -54.8745,
+    -68.1000
+  ],
+
+  martial: [
+    -54.7990549,
+    -68.3703118
+  ],
+
+  martialView: [
+    -54.7980,
+    -68.3670
+  ]
+
+};
+
+
+/* ==========================================================
+   MAPA
+========================================================== */
+
+const map = L.map(
+  "map",
+  {
+    zoomControl: true,
+    preferCanvas: true
+  }
+).setView(
+  [-54.82, -68.31],
+  10
+);
+
+
+/* ==========================================================
+   MAPAS BASE
+========================================================== */
+
+const satellite = L.tileLayer(
+
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+
+  {
+    maxZoom: 19,
+    attribution: "Tiles © Esri"
+  }
+
+);
+
+
+const streets = L.tileLayer(
+
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+  {
+    maxZoom: 19,
+    attribution:
+      "&copy; OpenStreetMap contributors"
+  }
+
+);
+
+
+const topo = L.tileLayer(
+
+  "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+
+  {
+    maxZoom: 17,
+    attribution:
+      "Map data © OpenStreetMap contributors, SRTM | Map style © OpenTopoMap"
+  }
+
+);
+
+
+const voyager = L.tileLayer(
+
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+
+  {
+    maxZoom: 19,
+    attribution:
+      "&copy; OpenStreetMap contributors &copy; CARTO"
+  }
+
+);
+
+
+satellite.addTo(map);
+
+
+/* ==========================================================
+   CAPAS
+========================================================== */
+
+L.control.layers(
+
+  {
+
+    "🛰️ Satelital":
+      satellite,
+
+    "🗺️ Turístico":
+      voyager,
+
+    "🏔️ Topográfico":
+      topo,
+
+    "🚗 Calles":
+      streets
+
+  },
+
+  null,
+
+  {
+    position: "topright",
+    collapsed: false
+  }
+
+).addTo(map);
+
+
+/* ==========================================================
+   GRUPOS DE CAPAS
+========================================================== */
+
+const routeLayers = {
+
+  1: L.layerGroup().addTo(map),
+  2: L.layerGroup().addTo(map),
+  3: L.layerGroup().addTo(map),
+  4: L.layerGroup().addTo(map),
+  5: L.layerGroup().addTo(map)
+
+};
+
+
+/* ==========================================================
+   CREAR ICONO
+========================================================== */
+
+function createIcon(
+  emoji,
+  color
+) {
+
+  return L.divIcon({
+
+    className: "",
+
+    html: `
+
+      <div
+        class="map-marker"
+        style="background:${color}"
+      >
+        ${emoji}
+      </div>
+
+    `,
+
+    iconSize: [
+      38,
+      38
+    ],
+
+    iconAnchor: [
+      19,
+      19
+    ]
+
+  });
+
+}
+
+
+/* ==========================================================
+   POPUP
+========================================================== */
+
+function popup(
+  day,
+  title,
+  text
+) {
+
+  return `
+
+    <div
+      class="popup-day"
+      style="background:${days[day].color}"
+    >
+
+      DÍA ${day}
+
+    </div>
+
+    <div class="popup-title">
+
+      ${title}
+
+    </div>
+
+    <div>
+
+      ${text}
+
+    </div>
+
+  `;
+
+}
+
+
+/* ==========================================================
+   MARCADORES DEL CIRCUITO
+========================================================== */
+
+function addMarker(
+  day,
+  coords,
+  emoji,
+  title,
+  text
+) {
+
+  const marker =
+    L.marker(
+
+      coords,
+
+      {
+        icon:
+          createIcon(
+            emoji,
+            days[day].color
+          )
+      }
+
+    );
+
+
+  marker
+    .bindPopup(
+      popup(
+        day,
+        title,
+        text
+      )
+    );
+
+
+  marker.addTo(
+    routeLayers[day]
+  );
+
+
+  return marker;
+
+}
+
+
+/* ==========================================================
+   BASE
+========================================================== */
+
+const baseIcon =
+  L.divIcon({
+
+    className: "",
+
+    html: `
+
+      <div
+        class="map-marker"
+        style="
+          background:#ff7a3c;
+          width:42px;
+          height:42px;
+        "
+      >
+        🏨
+      </div>
+
+    `,
+
+    iconSize: [
+      42,
+      42
+    ],
+
+    iconAnchor: [
+      21,
+      21
+    ]
+
+  });
+
+
+const baseMarker =
+  L.marker(
+
+    locations.center,
+
+    {
+      icon: baseIcon
+    }
+
+  )
+
+  .bindPopup(`
+
+    <div class="popup-title">
+      🏨 Base operativa
+    </div>
+
+    <b>Centro de Ushuaia</b>
+
+    <br><br>
+
+    Alojamiento durante las
+    cuatro noches del circuito.
+
+  `)
+
+  .addTo(map);
+
+
+/* ==========================================================
+   AEROPUERTO
+========================================================== */
+
+addMarker(
+  1,
+  locations.airport,
+  "✈️",
+  "Aeropuerto Internacional Malvinas Argentinas",
+  "Punto de llegada y salida del circuito. Se encuentra aproximadamente a 4 km de Ushuaia."
+);
+
+
+/* ==========================================================
+   DÍA 1
+========================================================== */
+
+addMarker(
+  1,
+  locations.center,
+  "🏨",
+  "Centro de Ushuaia",
+  "Base del circuito. Check-in, alojamiento, descanso y actividades libres."
+);
+
+
+addMarker(
+  1,
+  locations.port,
+  "🌊",
+  "Costanera y Puerto",
+  "Caminata introductoria por el borde costero y primer contacto con el Canal Beagle."
+);
+
+
+/* ==========================================================
+   DÍA 2
+========================================================== */
+
+addMarker(
+  2,
+  locations.train,
+  "🚂",
+  "Estación del Tren del Fin del Mundo",
+  "Salida del recorrido ferroviario hacia el Parque Nacional Tierra del Fuego."
+);
+
+
+addMarker(
+  2,
+  locations.ensenada,
+  "🌊",
+  "Ensenada Zaratiegui",
+  "Parada costera panorámica con vistas al Canal Beagle y la Isla Redonda."
+);
+
+
+addMarker(
+  2,
+  locations.acigami,
+  "🏔️",
+  "Lago Acigami",
+  "Lago rodeado por bosques y montañas. Punto de referencia dentro del Parque Nacional."
+);
+
+
+addMarker(
+  2,
+  locations.lapataia,
+  "🌲",
+  "Bahía Lapataia",
+  "Uno de los principales símbolos del Parque Nacional y punto donde finaliza la Ruta Nacional 3."
+);
+
+
+addMarker(
+  2,
+  locations.lapataiaView,
+  "📸",
+  "Mirador Lapataia",
+  "Sendero de baja dificultad de aproximadamente 980 m y 30 minutos."
+);
+
+
+/* ==========================================================
+   DÍA 3
+========================================================== */
+
+addMarker(
+  3,
+  locations.esmeraldaTrail,
+  "🥾",
+  "Inicio del trekking Laguna Esmeralda",
+  "Inicio de la senda desde la Ruta Nacional 3. El acceso se encuentra aproximadamente a 18 km de Ushuaia."
+);
+
+
+addMarker(
+  3,
+  locations.esmeralda,
+  "💎",
+  "Laguna Esmeralda",
+  "Trekking de 9 km ida y vuelta, 4–5 horas y 220 m de desnivel."
+);
+
+
+/* ==========================================================
+   DÍA 4
+========================================================== */
+
+addMarker(
+  4,
+  locations.port,
+  "⛴️",
+  "Puerto Turístico de Ushuaia",
+  "Punto de embarque para la navegación por el Canal Beagle."
+);
+
+
+addMarker(
+  4,
+  locations.birds,
+  "🐦",
+  "Isla de los Pájaros",
+  "Observación de aves marinas y explicación del ecosistema del Canal Beagle."
+);
+
+
+addMarker(
+  4,
+  locations.wolves,
+  "🦭",
+  "Isla de los Lobos",
+  "Observación de fauna marina."
+);
+
+
+addMarker(
+  4,
+  locations.lighthouse,
+  "🚨",
+  "Faro Les Éclaireurs",
+  "Icónica postal del Canal Beagle. Se encuentra aproximadamente a 20 km de Ushuaia."
+);
+
+
+addMarker(
+  4,
+  locations.bridges,
+  "🥾",
+  "Isla Bridges",
+  "En las modalidades que incluyen desembarco, se realiza un sendero interpretativo."
+);
+
+
+/* ==========================================================
+   DÍA 5
+========================================================== */
+
+addMarker(
+  5,
+  locations.martial,
+  "🏔️",
+  "Glaciar Martial",
+  "Circuito Mirador del Glaciar: aproximadamente 2.500 m, 75 minutos y 220 m de desnivel."
+);
+
+
+addMarker(
+  5,
+  locations.martialView,
+  "📸",
+  "Mirador panorámico",
+  "Vista elevada sobre Ushuaia y el Canal Beagle para cerrar simbólicamente el circuito."
+);
+
+
+/* ==========================================================
+   RUTAS TERRESTRES
+========================================================== */
+
+function roadRoute(
+  day,
+  points
+) {
+
+  const coordinates =
+    points
+      .map(
+        p =>
+          `${p[1]},${p[0]}`
+      )
+      .join(";");
+
+
+  const url =
+    "https://router.project-osrm.org/route/v1/driving/" +
+    coordinates +
+    "?overview=full&geometries=geojson";
+
+
+  fetch(url)
+
+    .then(
+      response =>
+        response.json()
+    )
+
+    .then(
+      data => {
+
+        if (
+          !data.routes ||
+          !data.routes.length
+        ) return;
+
+
+        const coords =
+          data.routes[0]
+            .geometry
+            .coordinates
+            .map(
+              c => [
+                c[1],
+                c[0]
+              ]
+            );
+
+
+        L.polyline(
+
+          coords,
+
+          {
+            color: "#ffffff",
+            weight: 8,
+            opacity: .75
+          }
+
+        ).addTo(
+          routeLayers[day]
+        );
+
+
+        L.polyline(
+
+          coords,
+
+          {
+            color:
+              days[day].color,
+
+            weight: 5,
+
+            opacity: .95
+          }
+
+        ).addTo(
+          routeLayers[day]
+        );
+
+      }
+
+    )
+
+    .catch(
+      error =>
+        console.log(
+          "Ruta no disponible",
+          error
+        )
+    );
+
+}
+
+
+/* ==========================================================
+   DÍA 1
+========================================================== */
+
+roadRoute(
+  1,
+  [
+    locations.airport,
+    locations.center,
+    locations.port,
+    locations.center
+  ]
+);
+
+
+/* ==========================================================
+   DÍA 2
+========================================================== */
+
+roadRoute(
+  2,
+  [
+    locations.center,
+    locations.train,
+    locations.ensenada,
+    locations.acigami,
+    locations.lapataia,
+    locations.lapataiaView,
+    locations.center
+  ]
+);
+
+
+/* ==========================================================
+   DÍA 3
+========================================================== */
+
+roadRoute(
+  3,
+  [
+    locations.center,
+    locations.esmeraldaTrail,
+    locations.center
+  ]
+);
+
+
+/* ==========================================================
+   DÍA 5
+========================================================== */
+
+roadRoute(
+  5,
+  [
+    locations.center,
+    locations.martial,
+    locations.martialView,
+    locations.center,
+    locations.airport
+  ]
+);
+
+
+/* ==========================================================
+   NAVEGACIÓN CANAL BEAGLE
+========================================================== */
+
+const boatPoints = [
+
+  locations.port,
+
+  locations.birds,
+
+  locations.wolves,
+
+  locations.lighthouse,
+
+  locations.bridges,
+
+  locations.port
+
+];
+
+
+L.polyline(
+
+  boatPoints,
+
+  {
+    color: "#ffffff",
+    weight: 9,
+    opacity: .6,
+    dashArray: "12 10"
+  }
+
+).addTo(
+  routeLayers[4]
+);
+
+
+L.polyline(
+
+  boatPoints,
+
+  {
+    color: "#00838f",
+    weight: 5,
+    opacity: .95,
+    dashArray: "12 10"
+  }
+
+).addTo(
+  routeLayers[4]
+);
+
+
+/* ==========================================================
+   FUNCIÓN MOSTRAR DÍA
+========================================================== */
+
+function showDay(day) {
+
+
+  /* botones */
+
+  document
+    .querySelectorAll(
+      ".day-button"
+    )
+    .forEach(
+      button =>
+        button.classList.remove(
+          "active"
+        )
+    );
+
+
+  document
+    .getElementById(
+      "btn" + day
+    )
+    .classList.add(
+      "active"
+    );
+
+
+  /* contenido */
+
+  const data =
+    days[day];
+
+
+  let html = `
+
+    <div class="day-title">
+
+      <div
+        class="day-icon"
+        style="
+          background:${data.color}
+        "
+      >
+
+        ${data.icon}
+
+      </div>
+
+      <h2>
+        ${data.title}
+      </h2>
+
+    </div>
+
+
+    <div class="day-subtitle">
+
+      ${data.subtitle}
+
+    </div>
+
+
+    <div class="stats">
+
+  `;
+
+
+  data.stats.forEach(
+    stat => {
+
+      html += `
+
+        <div class="stat">
+
+          <b>
+            ${stat[0]}
+          </b>
+
+          <span>
+            ${stat[1]}
+          </span>
+
+        </div>
+
+      `;
+
+    }
+  );
+
+
+  html += `
+
+    </div>
+
+
+    <div class="activity-box">
+
+      <h3>
+        🌎 Concepto de la jornada
+      </h3>
+
+      <p>
+        ${data.description}
+      </p>
+
+    </div>
+
+
+    <div class="timeline">
+
+  `;
+
+
+  data.timeline.forEach(
+    item => {
+
+      html += `
+
+        <div class="timeline-item">
+
+          <div class="timeline-time">
+            ${item[0]}
+          </div>
+
+          <div
+            class="timeline-card"
+            onclick="focusDayLocation(${day}, '${item[1]}')"
+          >
+
+            <strong>
+              ${item[1]}
+            </strong>
+
+            <span>
+              ${item[2]}
+            </span>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }
+  );
+
+
+  html += `
+
+    </div>
+
+  `;
+
+
+  document
+    .getElementById(
+      "dayContent"
+    )
+    .innerHTML = html;
+
+
+  /* mostrar solamente el día seleccionado */
+
+  for (
+    let i = 1;
+    i <= 5;
+    i++
+  ) {
+
+    if (
+      map.hasLayer(
+        routeLayers[i]
+      )
+    ) {
+
+      map.removeLayer(
+        routeLayers[i]
+      );
+
+    }
+
+  }
+
+
+  routeLayers[day]
+    .addTo(map);
+
+
+  /* enfocar */
+
+  focusDay(day);
+
+}
+
+
+/* ==========================================================
+   ENFOCAR DÍA
+========================================================== */
+
+function focusDay(day) {
+
+  const bounds =
+    routeLayers[day]
+      .getBounds();
+
+
+  if (
+    bounds.isValid()
+  ) {
+
+    map.fitBounds(
+      bounds,
+      {
+        padding: [
+          50,
+          50
+        ],
+        maxZoom: 13
+      }
+    );
+
+  }
+
+}
+
+
+/* ==========================================================
+   CONTROL DE DÍA EN MAPA
+========================================================== */
+
+function focusDayLocation(
+  day,
+  title
+) {
+
+  /*
+    El usuario puede hacer clic
+    en las tarjetas del itinerario.
+    El mapa se centra sobre el
+    recorrido correspondiente.
+  */
+
+  focusDay(day);
+
+}
+
+
+/* ==========================================================
+   LEYENDA
+========================================================== */
+
+const legend =
+  L.control({
+
+    position:
+      "bottomleft"
+
+  });
+
+
+legend.onAdd =
+function() {
+
+  const div =
+    L.DomUtil.create(
+      "div",
+      "legend"
+    );
+
+
+  div.innerHTML = `
+
+    <div class="legend-title">
+      REFERENCIAS
+    </div>
+
+    <div>
+      🏨 Base · Ushuaia
+    </div>
+
+    <div>
+      🚗 Ruta terrestre
+    </div>
+
+    <div>
+      ⛴️ Navegación Canal Beagle
+    </div>
+
+    <div>
+      🥾 Trekking
+    </div>
+
+    <div>
+      📸 Mirador / parada panorámica
+    </div>
+
+  `;
+
+
+  return div;
+
+};
+
+
+legend.addTo(map);
+
+
+/* ==========================================================
+   ESCALA
+========================================================== */
+
+L.control.scale({
+
+  imperial: false
+
+}).addTo(map);
+
+
+/* ==========================================================
+   BOTÓN CIRCUITO COMPLETO
+========================================================== */
+
+const allControl =
+  L.control({
+
+    position:
+      "topleft"
+
+  });
+
+
+allControl.onAdd =
+function() {
+
+  const button =
+    L.DomUtil.create(
+      "button",
+      "map-control"
+    );
+
+
+  button.innerHTML =
+    "🗺️ Ver circuito completo";
+
+
+  button.onclick =
+  function() {
+
+    const allBounds =
+      L.latLngBounds([]);
+
+
+    for (
+      let i = 1;
+      i <= 5;
+      i++
+    ) {
+
+      const bounds =
+        routeLayers[i]
+          .getBounds();
+
+
+      if (
+        bounds.isValid()
+      ) {
+
+        allBounds.extend(
+          bounds
+        );
+
+      }
+
+    }
+
+
+    allBounds.extend(
+      locations.airport
+    );
+
+
+    allBounds.extend(
+      locations.center
+    );
+
+
+    map.fitBounds(
+      allBounds,
+      {
+        padding: [
+          40,
+          40
+        ]
+      }
+    );
+
+  };
+
+
+  return button;
+
+};
+
+
+allControl.addTo(map);
+
+
+/* ==========================================================
+   INICIAR
+========================================================== */
+
+showDay(1);
+
+
+</script>
+
+</body>
+</html>
