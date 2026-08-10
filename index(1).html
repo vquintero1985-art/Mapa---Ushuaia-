@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ushuaia – Mapa Turístico Interactivo</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIINfQ3rQ6c5Q7e0mM7Q6xk9m8s5l5g0g2I="
+        crossorigin=""/>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7f8;
+      color: #24323a;
+    }
+    header {
+      background: linear-gradient(135deg, #173f4f, #2d6877);
+      color: white;
+      padding: 26px 22px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; font-size: 30px; }
+    header p { margin: 0; opacity: .9; }
+    .intro {
+      max-width: 1200px;
+      margin: 18px auto;
+      padding: 0 18px;
+      text-align: center;
+      line-height: 1.55;
+    }
+    .layout {
+      max-width: 1200px;
+      margin: 0 auto 28px;
+      padding: 0 18px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 16px;
+    }
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.08);
+      height: fit-content;
+    }
+    .panel h2 { margin-top: 0; font-size: 20px; }
+    .route-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px;
+      margin: 6px 0;
+      cursor: pointer;
+      text-align: left;
+      background: #edf3f5;
+      color: #24323a;
+      font-weight: bold;
+    }
+    .route-btn:hover { background: #dce9ed; }
+    .route-btn.active { background: #2d6877; color: white; }
+    .legend {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #ddd;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    #map {
+      width: 100%;
+      height: 650px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.10);
+      overflow: hidden;
+    }
+    .info-card {
+      max-width: 260px;
+    }
+    .info-card h3 { margin: 0 0 7px; color: #173f4f; }
+    .info-card p { margin: 5px 0; line-height: 1.4; }
+    footer {
+      text-align: center;
+      padding: 22px;
+      color: #60727a;
+      font-size: 13px;
+    }
+    @media (max-width: 850px) {
+      .layout { grid-template-columns: 1fr; }
+      #map { height: 520px; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Ushuaia – Mapa Turístico Interactivo</h1>
+  <p>Propuesta de circuitos y atractivos turísticos del Fin del Mundo</p>
+</header>
+
+<div class="intro">
+  <p>
+    Este mapa interactivo presenta una selección de atractivos de Ushuaia y sus
+    alrededores, organizados en circuitos para facilitar la interpretación del
+    territorio y la planificación de recorridos turísticos.
+  </p>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <h2>🧭 Circuitos</h2>
+
+    <button class="route-btn active" onclick="mostrarRuta('completo', this)">
+      🗺️ Circuito completo
+    </button>
+
+    <button class="route-btn" onclick="mostrarRuta('urbano', this)">
+      🏙️ Circuito urbano
+    </button>
+
+    <button class="route-btn" onclick="mostrarRuta('parque', this)">
+      🌲 Parque Nacional
+    </button>
+
+    <button class="route-btn" onclick="mostrarRuta('lagunas', this)">
+      🏔️ Lagos, lagunas y montaña
+    </button>
+
+    <button class="route-btn" onclick="mostrarRuta('beagle', this)">
+      🌊 Canal Beagle y zona este
+    </button>
+
+    <div style="margin-top:14px;padding:12px;border-radius:10px;background:#f5f8f9;font-size:13px;line-height:1.45;">
+      <strong>📌 Recorrido integral</strong><br>
+      El circuito completo reúne en un solo recorrido los principales atractivos
+      urbanos, naturales, históricos y paisajísticos seleccionados para el TP.
+    </div>
+
+    <div class="legend">
+      <strong>Cómo utilizarlo</strong><br>
+      • Seleccioná un circuito.<br>
+      • Hacé clic sobre los puntos del mapa.<br>
+      • Cada atractivo incluye una breve descripción.<br>
+      • Podés acercar, alejar y desplazarte por el mapa.
+    </div>
+  </aside>
+
+  <main>
+    <div id="map"></div>
+  </main>
+</div>
+
+<footer>
+  Trabajo Práctico – Turismo y territorio | Mapa interactivo de Ushuaia
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<script>
+const map = L.map('map').setView([-54.8019, -68.3029], 10);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const atractivos = [
+  {
+    nombre: "Centro de Ushuaia",
+    lat: -54.8019, lng: -68.3029,
+    circuito: "urbano",
+    descripcion: "Área central de Ushuaia, punto de partida para conocer la ciudad, su patrimonio, costanera y servicios turísticos."
+  },
+  {
+    nombre: "Museo del Fin del Mundo",
+    lat: -54.8048, lng: -68.3017,
+    circuito: "urbano",
+    descripcion: "Espacio dedicado a la historia, naturaleza y patrimonio de Tierra del Fuego."
+  },
+  {
+    nombre: "Tren del Fin del Mundo",
+    lat: -54.8326, lng: -68.4811,
+    circuito: "parque",
+    descripcion: "Recorrido ferroviario turístico que conecta Ushuaia con el área del Parque Nacional Tierra del Fuego."
+  },
+  {
+    nombre: "Parque Nacional Tierra del Fuego",
+    lat: -54.6667, lng: -68.5500,
+    circuito: "parque",
+    descripcion: "Área protegida con bosques, lagos, turberas, costas y senderos de gran valor paisajístico."
+  },
+  {
+    nombre: "Laguna Esmeralda",
+    lat: -54.7300, lng: -68.1800,
+    circuito: "lagunas",
+    descripcion: "Sendero de montaña hacia una laguna de intenso color turquesa, rodeada de bosques y montañas."
+  },
+  {
+    nombre: "Glaciar Martial",
+    lat: -54.7550, lng: -68.3300,
+    circuito: "lagunas",
+    descripcion: "Área de montaña ubicada al norte de la ciudad, con vistas panorámicas sobre Ushuaia y el Canal Beagle."
+  },
+  {
+    nombre: "Canal Beagle",
+    lat: -54.8700, lng: -68.2000,
+    circuito: "beagle",
+    descripcion: "Importante corredor marítimo del extremo austral, escenario de excursiones náuticas y observación de fauna."
+  },
+  {
+    nombre: "Faro Les Éclaireurs",
+    lat: -54.8738, lng: -68.2915,
+    circuito: "beagle",
+    descripcion: "Faro emblemático del Canal Beagle, uno de los íconos turísticos más reconocidos de Ushuaia."
+  },
+  {
+    nombre: "Estancia Harberton",
+    lat: -54.8870, lng: -67.2380,
+    circuito: "beagle",
+    descripcion: "Estancia histórica de Tierra del Fuego vinculada al patrimonio rural, natural y cultural de la región."
+  }
+];
+
+const colores = {
+  urbano: "#2d6877",
+  parque: "#477a45",
+  lagunas: "#596da8",
+  beagle: "#6c5b8e"
+};
+
+let marcadores = [];
+let rutas = [];
+
+function popup(a) {
+  return `
+    <div class="info-card">
+      <h3>${a.nombre}</h3>
+      <p>${a.descripcion}</p>
+      <p><strong>Circuito:</strong> ${a.circuito}</p>
+    </div>
+  `;
+}
+
+function limpiar() {
+  marcadores.forEach(m => map.removeLayer(m));
+  rutas.forEach(r => map.removeLayer(r));
+  marcadores = [];
+  rutas = [];
+}
+
+function mostrarRuta(tipo, boton) {
+  document.querySelectorAll('.route-btn').forEach(b => b.classList.remove('active'));
+  boton.classList.add('active');
+
+  limpiar();
+
+  // Orden sugerido para el circuito integral: ciudad → montaña → parque → Beagle.
+  const ordenCompleto = [
+    "Centro de Ushuaia",
+    "Museo del Fin del Mundo",
+    "Glaciar Martial",
+    "Tren del Fin del Mundo",
+    "Parque Nacional Tierra del Fuego",
+    "Laguna Esmeralda",
+    "Canal Beagle",
+    "Faro Les Éclaireurs",
+    "Estancia Harberton"
+  ];
+
+  const seleccionados = tipo === 'completo'
+    ? ordenCompleto.map(nombre => atractivos.find(a => a.nombre === nombre)).filter(Boolean)
+    : atractivos.filter(a => a.circuito === tipo);
+
+  seleccionados.forEach(a => {
+    const marker = L.circleMarker([a.lat, a.lng], {
+      radius: 8,
+      fillColor: colores[a.circuito] || "#2d6877",
+      color: "#ffffff",
+      weight: 2,
+      fillOpacity: .9
+    }).addTo(map);
+
+    marker.bindPopup(popup(a));
+    marcadores.push(marker);
+  });
+
+  // Une los puntos con una línea visual orientativa.
+  // Para el TP representa la secuencia del circuito; no reemplaza una ruta vial GPS.
+  const puntos = seleccionados.map(a => [a.lat, a.lng]);
+
+  if (puntos.length > 1) {
+    const linea = L.polyline(puntos, {
+      weight: tipo === 'completo' ? 5 : 4,
+      opacity: .7,
+      dashArray: tipo === 'completo' ? '10 7' : '8 8'
+    }).addTo(map);
+    rutas.push(linea);
+    map.fitBounds(linea.getBounds(), {padding: [30, 30]});
+  }
+
+  // Numeración del recorrido integral.
+  if (tipo === 'completo') {
+    seleccionados.forEach((a, i) => {
+      const numero = L.marker([a.lat, a.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="width:28px;height:28px;border-radius:50%;background:#173f4f;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:bold;box-shadow:0 2px 7px rgba(0,0,0,.3);">' + (i + 1) + '</div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        })
+      }).addTo(map);
+      numero.bindPopup(popup(a));
+      marcadores.push(numero);
+    });
+  }
+}
+
+mostrarRuta('completo', document.querySelector('.route-btn'));
+</script>
+
+</body>
+</html>
