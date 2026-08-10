@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Ushuaia – Mapa Turístico Interactivo</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f7f8;
+      color: #24323a;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    header {
+      background: linear-gradient(135deg, #173f4f, #2d6877);
+      color: white;
+      padding: clamp(16px, 4vw, 26px) 18px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 6px; font-size: clamp(20px, 4.5vw, 30px); line-height: 1.2; }
+    header p { margin: 0; opacity: .9; font-size: clamp(13px, 2.5vw, 16px); }
+
+    .intro {
+      max-width: 1200px;
+      margin: 16px auto;
+      padding: 0 16px;
+      text-align: center;
+      line-height: 1.55;
+      font-size: clamp(13px, 2.2vw, 15px);
+    }
+
+    .layout {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    }
+    .panel h2 { margin-top: 0; font-size: 19px; }
+
+    /* Toggle solo visible en mobile */
+    .panel-toggle {
+      display: none;
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: #173f4f;
+      color: #fff;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-toggle .chevron { transition: transform .2s ease; }
+    .panel-toggle.open .chevron { transform: rotate(180deg); }
+
+    .route-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      padding: 13px 14px;
+      margin: 6px 0;
+      cursor: pointer;
+      text-align: left;
+      background: #edf3f5;
+      color: #24323a;
+      font-weight: bold;
+      font-size: 14.5px;
+      min-height: 44px; /* target táctil accesible */
+      -webkit-tap-highlight-color: transparent;
+      transition: background .15s ease;
+    }
+    .route-btn:hover, .route-btn:active { background: #dce9ed; }
+    .route-btn.active { background: #2d6877; color: white; }
+
+    .legend {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #ddd;
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    main { min-width: 0; } /* evita overflow del grid en mobile */
+
+    #map {
+      width: 100%;
+      height: 640px;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.10);
+      overflow: hidden;
+    }
+
+    .info-card { max-width: 250px; }
+    .info-card h3 { margin: 0 0 6px; color: #173f4f; font-size: 16px; }
+    .info-card p { margin: 4px 0; line-height: 1.4; font-size: 13.5px; }
+
+    .leaflet-popup-content-wrapper { border-radius: 10px; }
+    .leaflet-container { font-size: 13.5px; }
+
+    /* Botones de zoom más grandes para dedos */
+    .leaflet-touch .leaflet-bar a {
+      width: 36px !important;
+      height: 36px !important;
+      line-height: 36px !important;
+      font-size: 18px !important;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px 16px;
+      color: #60727a;
+      font-size: 12.5px;
+    }
+
+    /* ===== Breakpoints ===== */
+
+    /* Tablets */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 240px 1fr; gap: 12px; }
+      #map { height: 560px; }
+    }
+
+    /* Mobile: panel colapsable arriba del mapa */
+    @media (max-width: 720px) {
+      .layout {
+        grid-template-columns: 1fr;
+        margin-bottom: 18px;
+      }
+      .panel-toggle { display: flex; }
+      .panel-body { display: none; }
+      .panel-body.open { display: block; }
+      .panel { padding: 14px; }
+      #map { height: 62vh; min-height: 380px; border-radius: 12px; }
+      .route-btn { font-size: 14px; padding: 12px; }
+    }
+
+    /* Mobile chico */
+    @media (max-width: 400px) {
+      header { padding: 14px 12px; }
+      .intro { padding: 0 10px; }
+      .layout { padding: 0 10px; }
+      #map { height: 58vh; min-height: 340px; }
+    }
+
+    /* Altura reducida (celular horizontal) */
+    @media (max-height: 480px) and (orientation: landscape) {
+      #map { height: 70vh; min-height: 260px; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Ushuaia – Mapa Turístico Interactivo</h1>
+  <p>Propuesta de circuitos y atractivos turísticos del Fin del Mundo</p>
+</header>
+
+<div class="intro">
+  <p>
+    Este mapa interactivo presenta una selección de atractivos de Ushuaia y sus
+    alrededores, organizados en circuitos para facilitar la interpretación del
+    territorio y la planificación de recorridos turísticos.
+  </p>
+</div>
+
+<div class="layout">
+  <aside class="panel">
+    <button class="panel-toggle" id="panelToggle" onclick="togglePanel()">
+      <span>🧭 Ver circuitos</span>
+      <span class="chevron">▾</span>
+    </button>
+
+    <div class="panel-body" id="panelBody">
+      <h2 class="desktop-title">🧭 Circuitos</h2>
+
+      <button class="route-btn active" onclick="mostrarRuta('todos', this)">
+        🌎 Todos los atractivos
+      </button>
+
+      <button class="route-btn" onclick="mostrarRuta('urbano', this)">
+        🏙️ Circuito urbano
+      </button>
+
+      <button class="route-btn" onclick="mostrarRuta('parque', this)">
+        🌲 Parque Nacional
+      </button>
+
+      <button class="route-btn" onclick="mostrarRuta('lagunas', this)">
+        🏔️ Lagos, lagunas y montaña
+      </button>
+
+      <button class="route-btn" onclick="mostrarRuta('beagle', this)">
+        🌊 Canal Beagle y zona este
+      </button>
+
+      <div class="legend">
+        <strong>Cómo utilizarlo</strong><br>
+        • Seleccioná un circuito.<br>
+        • Tocá o hacé clic sobre los puntos del mapa.<br>
+        • Cada atractivo incluye una breve descripción.<br>
+        • Podés acercar, alejar y desplazarte por el mapa.
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div id="map"></div>
+  </main>
+</div>
+
+<footer>
+  Trabajo Práctico – Turismo y territorio | Mapa interactivo de Ushuaia
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<script>
+  // ---- Panel colapsable (solo mobile) ----
+  function togglePanel() {
+    const body = document.getElementById('panelBody');
+    const btn = document.getElementById('panelToggle');
+    body.classList.toggle('open');
+    btn.classList.toggle('open');
+  }
+
+  // ---- Mapa ----
+  const isMobile = window.matchMedia('(max-width: 720px)').matches;
+
+  const map = L.map('map', {
+    tap: true,
+    zoomControl: true
+  }).setView([-54.8019, -68.3029], isMobile ? 9 : 10);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Reajusta el tamaño del mapa si cambia el layout (rotación, teclado, etc.)
+  window.addEventListener('resize', () => setTimeout(() => map.invalidateSize(), 200));
+  window.addEventListener('orientationchange', () => setTimeout(() => map.invalidateSize(), 300));
+
+  const atractivos = [
+    {
+      nombre: "Centro de Ushuaia",
+      lat: -54.8019, lng: -68.3029,
+      circuito: "urbano",
+      descripcion: "Área central de Ushuaia, punto de partida para conocer la ciudad, su patrimonio, costanera y servicios turísticos."
+    },
+    {
+      nombre: "Museo del Fin del Mundo",
+      lat: -54.8048, lng: -68.3017,
+      circuito: "urbano",
+      descripcion: "Espacio dedicado a la historia, naturaleza y patrimonio de Tierra del Fuego."
+    },
+    {
+      nombre: "Tren del Fin del Mundo",
+      lat: -54.8326, lng: -68.4811,
+      circuito: "parque",
+      descripcion: "Recorrido ferroviario turístico que conecta Ushuaia con el área del Parque Nacional Tierra del Fuego."
+    },
+    {
+      nombre: "Parque Nacional Tierra del Fuego",
+      lat: -54.6667, lng: -68.5500,
+      circuito: "parque",
+      descripcion: "Área protegida con bosques, lagos, turberas, costas y senderos de gran valor paisajístico."
+    },
+    {
+      nombre: "Laguna Esmeralda",
+      lat: -54.7300, lng: -68.1800,
+      circuito: "lagunas",
+      descripcion: "Sendero de montaña hacia una laguna de intenso color turquesa, rodeada de bosques y montañas."
+    },
+    {
+      nombre: "Glaciar Martial",
+      lat: -54.7550, lng: -68.3300,
+      circuito: "lagunas",
+      descripcion: "Área de montaña ubicada al norte de la ciudad, con vistas panorámicas sobre Ushuaia y el Canal Beagle."
+    },
+    {
+      nombre: "Canal Beagle",
+      lat: -54.8700, lng: -68.2000,
+      circuito: "beagle",
+      descripcion: "Importante corredor marítimo del extremo austral, escenario de excursiones náuticas y observación de fauna."
+    },
+    {
+      nombre: "Faro Les Éclaireurs",
+      lat: -54.8738, lng: -68.2915,
+      circuito: "beagle",
+      descripcion: "Faro emblemático del Canal Beagle, uno de los íconos turísticos más reconocidos de Ushuaia."
+    },
+    {
+      nombre: "Estancia Harberton",
+      lat: -54.8870, lng: -67.2380,
+      circuito: "beagle",
+      descripcion: "Estancia histórica de Tierra del Fuego vinculada al patrimonio rural, natural y cultural de la región."
+    }
+  ];
+
+  const colores = {
+    urbano: "#2d6877",
+    parque: "#477a45",
+    lagunas: "#596da8",
+    beagle: "#6c5b8e"
+  };
+
+  let marcadores = [];
+  let rutas = [];
+
+  function popup(a) {
+    return `
+      <div class="info-card">
+        <h3>${a.nombre}</h3>
+        <p>${a.descripcion}</p>
+        <p><strong>Circuito:</strong> ${a.circuito}</p>
+      </div>
+    `;
+  }
+
+  function limpiar() {
+    marcadores.forEach(m => map.removeLayer(m));
+    rutas.forEach(r => map.removeLayer(r));
+    marcadores = [];
+    rutas = [];
+  }
+
+  function mostrarRuta(tipo, boton) {
+    document.querySelectorAll('.route-btn').forEach(b => b.classList.remove('active'));
+    boton.classList.add('active');
+
+    limpiar();
+
+    const seleccionados = tipo === 'todos'
+      ? atractivos
+      : atractivos.filter(a => a.circuito === tipo);
+
+    // Radio de marcador ligeramente mayor en mobile para facilitar el toque
+    const radio = window.matchMedia('(max-width: 720px)').matches ? 10 : 8;
+
+    seleccionados.forEach(a => {
+      const marker = L.circleMarker([a.lat, a.lng], {
+        radius: radio,
+        fillColor: colores[a.circuito] || "#2d6877",
+        color: "#ffffff",
+        weight: 2,
+        fillOpacity: .9
+      }).addTo(map);
+
+      marker.bindPopup(popup(a), { maxWidth: 260 });
+      marcadores.push(marker);
+    });
+
+    // Une los puntos de cada circuito con una línea orientativa.
+    if (tipo !== 'todos') {
+      const puntos = seleccionados.map(a => [a.lat, a.lng]);
+      if (puntos.length > 1) {
+        const linea = L.polyline(puntos, {
+          weight: 4,
+          opacity: .65,
+          dashArray: '8 8'
+        }).addTo(map);
+        rutas.push(linea);
+        map.fitBounds(linea.getBounds(), { padding: [30, 30] });
+      }
+    } else {
+      map.setView([-54.8019, -68.3029], window.matchMedia('(max-width: 720px)').matches ? 9 : 10);
+    }
+
+    // En mobile, al elegir un circuito se cierra el panel para ver el mapa completo
+    if (window.matchMedia('(max-width: 720px)').matches) {
+      const body = document.getElementById('panelBody');
+      const btn = document.getElementById('panelToggle');
+      body.classList.remove('open');
+      btn.classList.remove('open');
+      setTimeout(() => map.invalidateSize(), 150);
+    }
+  }
+
+  mostrarRuta('todos', document.querySelector('.route-btn'));
+
+  // Asegura que el mapa se dibuje bien al cargar en mobile
+  setTimeout(() => map.invalidateSize(), 300);
+</script>
+
+</body>
+</html>
